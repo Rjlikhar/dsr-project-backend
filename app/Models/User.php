@@ -2,22 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Mass assignable attributes
      */
     protected $fillable = [
         'name',
@@ -25,35 +20,35 @@ class User extends Authenticatable
         'password',
         'role_id',
         'department_id',
-        'app_password'
+        'app_password',
+        'email_verified_at',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
+     * Hidden attributes
      */
     protected $hidden = [
         'password',
         'remember_token',
-        'app_password'
+        'app_password',
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Attribute casting
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * User belongs to a role
+     * User belongs to role
      */
     public function role()
     {
@@ -61,7 +56,7 @@ class User extends Authenticatable
     }
 
     /**
-     * User belongs to a department
+     * User belongs to department
      */
     public function department()
     {
@@ -69,44 +64,26 @@ class User extends Authenticatable
     }
 
     /**
-     * DSR created by user (employee)
+     * User has many DSRs
      */
     public function dsrs()
     {
-        return $this->hasMany(Dsr::class, 'user_id');
+        return $this->hasMany(Dsr::class);
     }
 
     /**
-     * DSRs where user is mentor
+     * User as mentor in DSRs
      */
-    public function mentoredDsrs()
+    public function mentorDsrs()
     {
         return $this->hasMany(Dsr::class, 'mentor_id');
     }
 
-    public function reviewedDsrs()
+    /**
+     * User as reviewer in DSRs
+     */
+    public function reviewerDsrs()
     {
-        return $this->hasMany(Dsr::class, 'code_reviewer_id');
-    }
-
-
-    public function isAdmin(): bool
-    {
-        return $this->role?->role === 'admin';
-    }
-
-    public function isEmployee(): bool
-    {
-        return $this->role?->role === 'employee';
-    }
-
-    public function isMentor(): bool
-    {
-        return $this->role?->role === 'mentor';
-    }
-
-    public function isCodeReviewer(): bool
-    {
-        return $this->role?->role === 'code_reviewer';
+        return $this->hasMany(Dsr::class, 'reviewer_id');
     }
 }

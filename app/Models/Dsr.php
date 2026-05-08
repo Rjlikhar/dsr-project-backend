@@ -12,8 +12,6 @@ class Dsr extends Model
 
     protected $fillable = [
         'user_id',
-        'mentor_id',
-        'code_reviewer_id',
         'work_date',
         'data',
         'status',
@@ -33,15 +31,5 @@ class Dsr extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function mentor()
-    {
-        return $this->belongsTo(User::class, 'mentor_id');
-    }
-
-    public function codeReviewer()
-    {
-        return $this->belongsTo(User::class, 'code_reviewer_id');
     }
 }

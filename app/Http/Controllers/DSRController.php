@@ -8,6 +8,7 @@ use App\Services\Interfaces\DsrServiceInterface;
 use BcMath\Number;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class DSRController extends Controller
@@ -17,21 +18,63 @@ class DSRController extends Controller
         protected DsrServiceInterface $dsrService
     ) {}
 
+
+
     public function store(Request $request)
     {
-        $request->validate([
-            'work_date' => 'required|date',
-            'data' => 'required|array',
-        ]);
+        try {
 
-        Log::info("Creating DSR", $request->all());
+            // Validation
+            $validated = $request->validate([
+                'work_date' => 'required|date',
+                'data' => 'required|array',
+            ]);
 
-        $dsr = $this->dsrService->create($request->all());
+            // Request Log
+            Log::info('DSR Store Request Received', [
+                'payload' => $validated,
+                'user_id' => Auth::id(),
+            ]);
 
-        return response()->json([
-            'message' => 'DSR created successfully',
-            'data' => $dsr
-        ], 201);
+            // Create DSR
+            $dsr = $this->dsrService->create($validated);
+
+            // Success Log
+            Log::info('DSR Created Successfully', [
+                'dsr_id' => $dsr->id ?? null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'DSR created successfully',
+                'data' => $dsr,
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            // Validation Error Log
+            Log::warning('DSR Validation Failed', [
+                'errors' => $e->errors(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+
+            // Server Error Log
+            Log::error('DSR Creation Failed', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(), // Toast message
+            ], 500);
+        }
     }
 
 

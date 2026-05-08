@@ -17,65 +17,62 @@ class DsrService implements DsrServiceInterface
 {
     public function create(array $data)
     {
-
-        Log::info('Creating DSR Service Data', [
-            'incoming_data' => $data
+        Log::info('Creating DSR Service', [
+            'user_id' => Auth::id(),
+            'work_date' => $data['work_date'],
         ]);
 
         $userId = Auth::id();
         $inputDate = Carbon::parse($data['work_date'])->toDateString();
-        $today = Carbon::today()->toDateString();
+        $today = now()->toDateString();
 
+        // Only today DSR allowed
         if ($inputDate !== $today) {
-            return [
-                'status' => false,
-                'message' => 'You can only create DSR for today.',
-                'status_code' => 400,
-            ];
+
+            Log::warning('Invalid DSR Date Attempt', [
+                'user_id' => $userId,
+                'input_date' => $inputDate,
+            ]);
+
+            throw new \Exception('You can only create DSR for today.', 400);
         }
 
+        // Check existing submitted DSR
         $existingDsr = Dsr::where('user_id', $userId)
             ->where('work_date', $inputDate)
             ->first();
 
-        if ($existingDsr && $existingDsr->status === 'submitted') {
-            return [
-                'status' => false,
-                'message' => 'DSR already submitted for today. You cannot create again.',
-                'status_code' => 400,
-            ];
+        if ($existingDsr?->status === 'submitted') {
+
+            Log::warning('Duplicate Submitted DSR Attempt', [
+                'user_id' => $userId,
+                'work_date' => $inputDate,
+            ]);
+
+            throw new \Exception(
+                'DSR already submitted for today. You cannot create again.',
+                400
+            );
         }
-        // Names coming from JSON
-        $mentorName = $data['data']['meta']['mentor'] ?? null;
-        $codeReviewerName = $data['data']['meta']['codeReviewer'] ?? null;
 
-        $mentorId = $mentorName ? User::where('name', $mentorName)->value('id')
-            : null;
-
-        $codeReviewerId = $codeReviewerName ? User::where('name', $codeReviewerName)->value('id')
-            : null;
-
+        // Create or update draft
         $dsr = Dsr::updateOrCreate(
             [
                 'user_id' => $userId,
                 'work_date' => $inputDate,
             ],
             [
-                'mentor_id' => $mentorId,
-                'code_reviewer_id' => $codeReviewerId,
-                'data' => $data['data'], // ✅ JSON only
+                'data' => $data['data'],
                 'status' => $data['status'] ?? 'draft',
                 'approved_by' => $data['approved_by'] ?? null,
                 'approved_at' => $data['approved_at'] ?? null,
             ]
         );
 
-        return [
-            'status' => true,
-            'message' => 'DSR saved successfully.',
-            'dsr' => $dsr,
-            'status_code' => 200,
-        ];
+        Log::info('DSR Saved Successfully', [
+            'dsr_id' => $dsr->id,
+            'status' => $dsr->status,
+        ]);
     }
 
 
@@ -83,14 +80,10 @@ class DsrService implements DsrServiceInterface
     {
         return Dsr::with([
             'user:id,name,email',
-            'mentor:id,name,email',
-            'codeReviewer:id,name,email'
         ])
             ->select([
                 'id',
                 'user_id',
-                'mentor_id',
-                'code_reviewer_id',
                 'work_date',
                 'data',
                 'status',
@@ -109,15 +102,11 @@ class DsrService implements DsrServiceInterface
     {
         return Dsr::with([
             'user:id,name,email',
-            'mentor:id,name,email',
-            'codeReviewer:id,name,email',
             'approver:id,name,email'
         ])
             ->select([
                 'id',
                 'user_id',
-                'mentor_id',
-                'code_reviewer_id',
                 'work_date',
                 'data',
                 'status',
