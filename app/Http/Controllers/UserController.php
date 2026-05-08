@@ -34,7 +34,7 @@ class UserController extends Controller
 
         $result = $this->userService->saveAppPassword(
             $user->id,
-            $request->app_password
+            str_replace(' ', '', $request->app_password)
         );
 
         return response()->json($result, $result['status_code']);
