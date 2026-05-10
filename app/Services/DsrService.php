@@ -6,6 +6,7 @@ use App\Models\Dsr;
 use App\Models\User;
 use App\Mail\DSRSubmittedMail;
 use App\Models\Department;
+use App\Models\MissedDsr;
 use App\Services\Interfaces\DsrServiceInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -27,14 +28,22 @@ class DsrService implements DsrServiceInterface
         $today = now()->toDateString();
 
         // Only today DSR allowed
-        if ($inputDate !== $today) {
+        $isApprovedRequest = MissedDsr::where('user_id', $userId)
+            ->where('request_date', $inputDate)
+            ->where('status', 'approved')
+            ->exists();
+
+        if ($inputDate !== $today && !$isApprovedRequest) {
 
             Log::warning('Invalid DSR Date Attempt', [
                 'user_id' => $userId,
                 'input_date' => $inputDate,
             ]);
 
-            throw new \Exception('You can only create DSR for today.', 400);
+            throw new \Exception(
+                'You are not allowed to create DSR for this date.',
+                400
+            );
         }
 
         // Check existing submitted DSR
