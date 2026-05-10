@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('mentor')->nullable();
+            $table->string('code_reviewer')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('app_password')->nullable();

@@ -140,4 +140,17 @@ class UserService implements UserServiceInterface
         ];
     }
 }
+
+    public function updateMentorReviewer($id, array $data)
+    {
+        $user = User::findOrFail($id);
+
+        $user->mentor = $data['mentor'] ?? $user->mentor;
+
+        $user->code_reviewer =$data['code_reviewer'] ?? $user->code_reviewer;
+
+        $user->save();
+
+        return $user;
+    }
 }
