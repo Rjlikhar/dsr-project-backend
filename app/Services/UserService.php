@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\DTO\User\RegisterUserDTO;
+use App\Models\Department;
 use App\Models\Dsr;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\Interfaces\UserServiceInterface;
 use Illuminate\Http\Request;
@@ -18,12 +20,14 @@ class UserService implements UserServiceInterface
     public function register(array $data): User
     {
         $dto = RegisterUserDTO::fromArray($data);
+        $role = Role::where('name',$dto->role)->firstOrFail();
+        $department = Department::where('name',$dto->department)->first();
         return User::create([
             'name' => $dto->name,
             'email' => $dto->email,
             'password' => Hash::make($dto->password),
-            'department_id' => 1,
-            'role_id' => 2,
+            'role_id' => $role->id,
+            'department_id' => $department?->id,
         ]);
     }
 
