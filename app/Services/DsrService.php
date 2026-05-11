@@ -127,41 +127,6 @@ class DsrService implements DsrServiceInterface
             ->findOrFail($id);
     }
 
-
-
-    public function update(int $id, array $data)
-    {
-        $dsr = Dsr::findOrFail($id);
-
-        $mentorName = $data['data']['meta']['mentor'] ?? null;
-        $codeReviewerName = $data['data']['meta']['codeReviewer'] ?? null;
-
-        // Convert names to IDs
-        $mentorId = $mentorName ? User::where('name', $mentorName)->value('id')
-            : $dsr->mentor_id;
-
-        $codeReviewerId = $codeReviewerName ? User::where('name', $codeReviewerName)->value('id')
-            : $dsr->code_reviewer_id;
-
-        // Update DSR
-        $dsr->update([
-            'mentor_id' => $mentorId,
-            'code_reviewer_id' => $codeReviewerId,
-            'work_date' => $data['work_date'] ?? $dsr->work_date,
-            'data' => $data['data'] ?? $dsr->data,
-            'status' => $data['status'] ?? $dsr->status,
-            'approved_by' => $data['approved_by'] ?? $dsr->approved_by,
-            'approved_at' => $data['approved_at'] ?? $dsr->approved_at,
-        ]);
-
-        return $dsr->load([
-            'user:id,name,email',
-            'mentor:id,name,email',
-            'codeReviewer:id,name,email',
-            'approver:id,name,email'
-        ]);
-    }
-
     public function send(array $data): array
     {
         try {
@@ -246,7 +211,8 @@ class DsrService implements DsrServiceInterface
              */
             try {
                 $mailer->to($receiverEmail)->send(
-                    new DSRSubmittedMail($dsr, $htmlContent)
+                    (new DSRSubmittedMail($dsr, $htmlContent))
+                        ->from($sender->email, $sender->name)
                 );
             } catch (\Exception $mailException) {
 
