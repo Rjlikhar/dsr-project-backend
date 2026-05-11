@@ -15,7 +15,8 @@ class UserController extends Controller
 {
     public function __construct(
         protected UserServiceInterface $userService
-    ) {}
+    ) {
+    }
 
 
     public function saveAppPassword(Request $request)
@@ -44,14 +45,14 @@ class UserController extends Controller
     public function register(RegisterRequest $request)
     {
 
-        if (Auth::user()->role_id !== 1) {
-
+        if (Auth::user()->role_id != 1) {
             return response()->json([
+
                 'status' => false,
                 'message' => 'Unauthorized access',
             ], 403);
         }
-        
+
         $user = $this->userService->register($request->validated());
 
         Log::info('User Registered Successfully', [
@@ -111,7 +112,7 @@ class UserController extends Controller
         );
     }
 
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'mentor' => 'nullable|string',
