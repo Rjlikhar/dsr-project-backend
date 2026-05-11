@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DSRController;
+use App\Http\Controllers\GroupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MissedDsrController;
@@ -36,6 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/missed-dsr-requests',[MissedDsrController::class, 'getAllMissedDsrRequests']);
         Route::put('/missed-dsr-requests/{id}/status',[MissedDsrController::class, 'updateStatus']);
     });
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/groups', [GroupController::class, 'index']);
+     Route::put('/user/group', [GroupController::class, 'update']);
 });
 
 ?>

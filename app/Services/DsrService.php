@@ -214,23 +214,16 @@ class DsrService implements DsrServiceInterface
                 ];
             }
 
-            $department = Department::find($sender->department_id);
+            $receiverEmail = $sender->group?->email;
 
-            if (!$department || empty($department->receiver_email)) {
+            if (!$receiverEmail) {
 
-                Log::warning('No department receiver email found', [
-                    'sender_id' => $sender->id,
-                    'department_id' => $sender->department_id,
+                Log::warning('No group email found', [
+                    'user_id' => $sender->id,
+                    'group_id' => $sender->group_id,
                 ]);
 
-                return [
-                    'status' => false,
-                    'message' => 'No receiver email configured for this department.',
-                    'status_code' => 404,
-                ];
             }
-
-            $receiverEmail = $department->receiver_email;
 
             $smtpConfig = [
                 'transport' => 'smtp',
@@ -279,10 +272,6 @@ class DsrService implements DsrServiceInterface
                     'id' => $sender->id,
                     'name' => $sender->name,
                     'email' => $sender->email,
-                ],
-                'department' => [
-                    'id' => $department->id,
-                    'name' => $department->name,
                 ],
                 'receiver_email' => $receiverEmail,
                 'dsr_id' => $dsr->id,

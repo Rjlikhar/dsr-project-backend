@@ -86,4 +86,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Dsr::class, 'reviewer_id');
     }
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class, 'group_id');
+    }
 }
