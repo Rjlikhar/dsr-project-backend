@@ -39,6 +39,7 @@ class MissedDsrService implements MissedDsrInterface
 
             $existingDsr = Dsr::where('user_id', $userId)
                 ->whereDate('created_at', $requestDate)
+                ->where('status', '!=', 'draft')
                 ->exists();
 
             if ($existingDsr) {
