@@ -100,30 +100,6 @@ class DSRController extends Controller
         ], 200);
     }
 
-
-    /**
-     * Update DSR by ID
-     */
-    public function update(Request $request, $id)
-    {
-        $validatedData = $request->validate([
-            'work_date' => 'required|date',
-            'data' => 'required|array',
-            'status' => 'nullable|string',
-            'approved_by' => 'nullable|integer|exists:users,id',
-            'approved_at' => 'nullable|date',
-        ]);
-
-        $dsr = $this->dsrService->update($id, $validatedData);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'DSR updated successfully',
-            'data' => $dsr,
-        ], 200);
-    }
-
-
     public function submit(Request $request): JsonResponse
     {
         try {

@@ -110,4 +110,20 @@ class UserController extends Controller
             $request->user()
         );
     }
+
+public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'mentor' => 'nullable|string',
+            'code_reviewer' => 'nullable|string',
+        ]);
+
+        $user = $this->userService->updateMentorReviewer($id, $validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully',
+            'data' => $user,
+        ], 200);
+    }
 }
