@@ -9,6 +9,7 @@ use Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -43,12 +44,18 @@ class UserController extends Controller
     public function register(RegisterRequest $request)
     {
 
-        Log::info("Hello");
+        if (Auth::user()->role_id !== 1) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized access',
+            ], 403);
+        }
+        
         $user = $this->userService->register($request->validated());
 
         Log::info('User Registered Successfully', [
-            'user_id' => $user->id,
-            'email' => $user->email
+            'user_id' => $user
         ]);
 
         return response()->json([

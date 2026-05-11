@@ -10,6 +10,9 @@ class RegisterUserDTO
         public readonly string $name,
         public readonly string $email,
         public readonly string $password,
+        public readonly string $role,
+        public readonly string $department,
+
     ) {}
 
     /**
@@ -20,7 +23,9 @@ class RegisterUserDTO
         return new self(
             name: $data['name'],
             email: $data['email'],
-            password: $data['password']
+            password: $data['password'],
+            role: $data['role'],
+            department: $data['department'] ?? null,
         );
     }
 }

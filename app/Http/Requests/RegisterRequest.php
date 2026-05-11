@@ -43,11 +43,17 @@ class RegisterRequest extends FormRequest
                 'min:6'
             ],
 
-            // 'department_id' => [
-            //     'required',
-            //     'integer',
-            //     'exists:departments,id'
-            // ],
+            'role' => [
+                'required',
+                'string',
+                'exists:roles,name'
+            ],
+
+            'department' => [
+                'nullable',
+                'string',
+                'exists:departments,name'
+            ],
         ];
     }
 
