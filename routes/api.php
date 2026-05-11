@@ -8,11 +8,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\MissedDsrController;
 
 Route::controller(UserController::class)->group(function () {
-
-
+    Route::post('/login', 'login');
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/register', 'register');
-        Route::post('/login', 'login');
         Route::get('/me', 'me');
         Route::post('/logout', 'logout');
         Route::put('/change-password', 'changePassword');
