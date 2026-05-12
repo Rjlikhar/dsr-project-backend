@@ -19,6 +19,8 @@ Route::controller(UserController::class)->group(function () {
             '/user/{id}/mentor-reviewer',
             [UserController::class, 'update']
         );
+        Route::get('/users', 'index');
+
     });
 });
 

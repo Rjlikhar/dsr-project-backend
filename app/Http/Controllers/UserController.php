@@ -127,4 +127,9 @@ class UserController extends Controller
             'data' => $user,
         ], 200);
     }
+
+    public function index()
+    {
+        return $this->userService->getAllUsers();
+    }
 }

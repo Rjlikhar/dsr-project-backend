@@ -157,4 +157,34 @@ class UserService implements UserServiceInterface
 
         return $user;
     }
+
+    public function getAllUsers()
+    {
+        try {
+
+        return response()->json([
+            'success' => true,
+
+            'data' => [
+                'total_users' => User::count(),
+
+                'admin_users' => User::where(
+                    'role_id', 1
+                )->count(),
+            ]
+        ]);
+
+    } catch (\Throwable $th) {
+
+        Log::error('Failed to fetch user counts', [
+            'error' => $th->getMessage()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch user counts'
+        ], 500);
+    }
+    }
+
 }
