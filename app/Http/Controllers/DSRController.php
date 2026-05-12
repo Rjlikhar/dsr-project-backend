@@ -89,16 +89,27 @@ class DSRController extends Controller
     }
 
 
-    public function index($id)
+    public function index()
     {
-        $dsr = $this->dsrService->getById($id);
+        $user = Auth::user();
+       
+        $draft = $this->dsrService->getDraftByUser($user->id);
+
+        if (!$draft) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No draft found',
+                'data' => null,
+            ]);
+        }
 
         return response()->json([
-            'success' => true,
-            'message' => 'DSR fetched successfully',
-            'data' => $dsr,
-        ], 200);
+            'status' => true,
+            'message' => 'Draft fetched successfully',
+            'data' => $draft,
+        ]);
     }
+
 
     public function submit(Request $request): JsonResponse
     {
@@ -127,4 +138,7 @@ class DSRController extends Controller
             ], 500);
         }
     }
+
+
+    public function getDraft(Request $request) {}
 }

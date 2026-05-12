@@ -25,7 +25,7 @@ Route::controller(UserController::class)->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dsr', [DSRController::class, 'store']);
     Route::get('/dsr', [DSRController::class, 'show']);
-    Route::get('/dsr/{id}', [DSRController::class, 'index']);
+    Route::get('/dsr/draft', [DSRController::class, 'index']);
     Route::post('/dsr/send', [DSRController::class, 'submit']);
 });
 

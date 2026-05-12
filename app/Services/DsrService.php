@@ -107,25 +107,25 @@ class DsrService implements DsrServiceInterface
     }
 
 
-    public function getById(int $id)
-    {
-        return Dsr::with([
-            'user:id,name,email',
-            'approver:id,name,email'
-        ])
-            ->select([
-                'id',
-                'user_id',
-                'work_date',
-                'data',
-                'status',
-                'approved_by',
-                'approved_at',
-                'created_at',
-                'updated_at'
-            ])
-            ->findOrFail($id);
-    }
+    // public function getById(int $id)
+    // {
+    //     return Dsr::with([
+    //         'user:id,name,email',
+    //         'approver:id,name,email'
+    //     ])
+    //         ->select([
+    //             'id',
+    //             'user_id',
+    //             'work_date',
+    //             'data',
+    //             'status',
+    //             'approved_by',
+    //             'approved_at',
+    //             'created_at',
+    //             'updated_at'
+    //         ])
+    //         ->findOrFail($id);
+    // }
 
     public function send(array $data): array
     {
@@ -187,7 +187,6 @@ class DsrService implements DsrServiceInterface
                     'user_id' => $sender->id,
                     'group_id' => $sender->group_id,
                 ]);
-
             }
 
             $smtpConfig = [
@@ -259,5 +258,28 @@ class DsrService implements DsrServiceInterface
                 'status_code' => 500,
             ];
         }
+    }
+
+    public function getDraftByUser(int $userId)
+    {
+        return Dsr::with([
+            'user:id,name,email',
+        ])
+            ->select([
+                'id',
+                'user_id',
+                'work_date',
+                'data',
+                'status',
+                'approved_by',
+                'approved_at',
+                'created_at',
+                'updated_at'
+            ])
+            ->where('user_id', $userId)
+            ->where('status', 'draft')
+            ->whereDate('work_date', now()->toDateString())
+            ->latest()
+            ->first();
     }
 }
