@@ -4,16 +4,16 @@ namespace App\Services;
 
 use App\DTO\User\RegisterUserDTO;
 use App\Models\Department;
-use App\Models\Dsr;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Interfaces\UserServiceInterface;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class UserService implements UserServiceInterface
 {
@@ -91,59 +91,89 @@ class UserService implements UserServiceInterface
         ], 200);
     }
 
+    public function sendPasswordResetLink(array $data): string
+    {
+        return Password::sendResetLink([
+            'email' => $data['email'],
+        ]);
+    }
 
-     public function saveAppPassword(int $userId, string $appPassword): array
-{
-    Log::info("ENTERED FUNCTION");
+    public function resetPassword(array $data): string
+    {
+        return Password::reset(
+            [
+                'email' => $data['email'],
+                'token' => $data['token'],
+                'password' => $data['password'],
+            ],
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                ])->setRememberToken(Str::random(60));
 
-    try {
+                $user->save();
 
-        Log::info("TRY START");
+                // Your login uses Sanctum tokens. Require login again
+                // on every device after a successful reset.
+                $user->tokens()->delete();
 
-        $user = User::find($userId);
+                event(new PasswordReset($user));
+            }
+        );
+    }
 
-        Log::info("USER FETCHED", ['user' => $user]);
+    public function saveAppPassword(int $userId, string $appPassword): array
+    {
+        Log::info("ENTERED FUNCTION");
 
-        if (!$user) {
-            Log::info("USER NOT FOUND");
+        try {
+
+            Log::info("TRY START");
+
+            $user = User::find($userId);
+
+            Log::info("USER FETCHED", ['user' => $user]);
+
+            if (!$user) {
+                Log::info("USER NOT FOUND");
+                return [
+                    'status' => false,
+                    'message' => 'User not found.',
+                    'status_code' => 404,
+                ];
+            }
+
+            $encrypted = Crypt::encryptString($appPassword);
+
+            Log::info("PASSWORD ENCRYPTED");
+
+            $updated = $user->update([
+                'app_password' => $encrypted,
+            ]);
+
+            Log::info("UPDATE RESULT", ['updated' => $updated]);
+
+            return [
+                'status' => true,
+                'message' => 'App password saved successfully.',
+                'user_id' => $user->id,
+                'status_code' => 200,
+            ];
+
+        } catch (\Throwable $e) {
+
+            Log::error('CATCH EXECUTED', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+
             return [
                 'status' => false,
-                'message' => 'User not found.',
-                'status_code' => 404,
+                'message' => 'Failed to save app password.',
+                'status_code' => 500,
             ];
         }
-
-        $encrypted = Crypt::encryptString($appPassword);
-
-        Log::info("PASSWORD ENCRYPTED");
-
-        $updated = $user->update([
-            'app_password' => $encrypted,
-        ]);
-
-        Log::info("UPDATE RESULT", ['updated' => $updated]);
-
-        return [
-            'status' => true,
-            'message' => 'App password saved successfully.',
-            'user_id' => $user->id,
-            'status_code' => 200,
-        ];
-
-    } catch (\Throwable $e) {
-
-        Log::error('CATCH EXECUTED', [
-            'user_id' => $userId,
-            'error' => $e->getMessage(),
-        ]);
-
-        return [
-            'status' => false,
-            'message' => 'Failed to save app password.',
-            'status_code' => 500,
-        ];
     }
-}
 
     public function updateMentorReviewer($id, array $data)
     {

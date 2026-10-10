@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Services\Interfaces\UserServiceInterface;
-use Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Password;
 
 class UserController extends Controller
 {
@@ -110,6 +109,62 @@ class UserController extends Controller
             $request->all(),
             $request->user()
         );
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $status = $this->userService->sendPasswordResetLink($data);
+
+        if ($status === Password::INVALID_USER) {
+            return response()->json([
+                'status' => false,
+                'message' => 'This email address is not registered.',
+            ], 404);
+        }
+
+        if ($status === Password::RESET_THROTTLED) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Please wait before requesting another reset email.',
+            ], 429);
+        }
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Could not send the password reset email.',
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Password reset token sent to your email.',
+        ], 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $status = $this->userService->resetPassword($data);
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return response()->json([
+                'message' => 'Invalid or expired reset token.',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Password reset successfully. Please log in again.',
+        ], 200);
     }
 
     public function update(Request $request, $id)

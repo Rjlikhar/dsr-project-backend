@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ApiPasswordResetNotification;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -92,5 +93,10 @@ class User extends Authenticatable
     public function group()
     {
         return $this->belongsTo(Group::class, 'group_id');
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ApiPasswordResetNotification($token));
     }
 }

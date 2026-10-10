@@ -14,5 +14,6 @@ interface UserServiceInterface
     public function saveAppPassword(int $userId, string $appPassword): array;
     public function updateMentorReviewer($id, array $data);
     public function getAllUsers();
+    public function sendPasswordResetLink(array $data): string;
 
 }
